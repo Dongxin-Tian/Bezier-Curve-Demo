@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Bezier Curve Drawer</title>
+</head>
+<body>
+<canvas id="bezierCanvas" width="600" height="600" style="border:1px solid #000;"></canvas>
+<script src="bezierCurve.js"></script>
+<script>
+    window.onload = function() {
+        const canvas = document.getElementById("bezierCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let points = [{ x: 50, y: 50 }, { x: 550, y: 550 }];
+        let bezierCurve = new BezierCurve(points);
+        let draggingPoint = null;
+
+        let t = 0; // Interpolation factor for the bezier curve
+        const squareSize = 20; // Size of the square
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the Bezier curve
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 0; i <= 1; i += 0.01) {
+                const p = bezierCurve.getPoint(i);
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.stroke();
+
+            // Draw points
+            points.forEach(point => {
+                ctx.fillStyle = "red";
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw square on the curve
+            const squarePoint = bezierCurve.getPoint(t);
+            ctx.fillStyle = "blue";
+            ctx.fillRect(squarePoint.x - squareSize / 2, squarePoint.y - squareSize / 2, squareSize, squareSize);
+        }
+
+        function animate() {
+            t += 0.01; // Increment the interpolation factor
+            if (t > 1) t = 0; // Reset t if it exceeds 1
+
+            draw();
+            requestAnimationFrame(animate); // Request next frame of the animation
+        }
+
+        function addPoint(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            points.splice(points.length - 1, 0, { x: mouseX, y: mouseY });
+
+            bezierCurve = new BezierCurve(points);
+            draw();
+        }
+
+        function removePoint(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            points = points.filter((point, index) => {
+                if (index === 0 || index === points.length - 1) return true;
+                return Math.sqrt((mouseX - point.x) ** 2 + (mouseY - point.y) ** 2) >= 10;
+            });
+
+            bezierCurve = new BezierCurve(points);
+            draw();
+        }
+
+        function onCanvasMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            for (let i = 0; i < points.length; i++) {
+                const point = points[i];
+                if (Math.sqrt((mouseX - point.x) ** 2 + (mouseY - point.y) ** 2) < 10) {
+                    draggingPoint = point;
+                    break;
+                }
+            }
+        }
+
+        function onCanvasMouseMove(e) {
+            if (draggingPoint) {
+                const rect = canvas.getBoundingClientRect();
+                draggingPoint.x = e.clientX - rect.left;
+                draggingPoint.y = e.clientY - rect.top;
+                bezierCurve = new BezierCurve(points);
+                draw();
+            }
+        }
+
+        function onCanvasMouseUp() {
+            draggingPoint = null;
+        }
+
+        canvas.addEventListener("dblclick", addPoint);
+        canvas.addEventListener("contextmenu", removePoint);
+        canvas.addEventListener("mousedown", onCanvasMouseDown);
+        canvas.addEventListener("mousemove", onCanvasMouseMove);
+        canvas.addEventListener("mouseup", onCanvasMouseUp);
+
+        animate(); // Start the animation
+    };
+</script>
+</body>
+</html>

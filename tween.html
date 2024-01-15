@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Canvas Circle with Alpha Transition</title>
+</head>
+<body>
+    <canvas id="myCanvas" width="400" height="400" style="border:1px solid #000000;"></canvas>
+
+    <script src="bezierCurve.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let canvas = document.getElementById("myCanvas");
+            let ctx = canvas.getContext("2d");
+
+            let t = 0;
+            let increment = 0.01;
+            let curve = new BezierCurve([{x: 0, y: 0}, {x: 0.25, y: 1}, {x: 0.5, y: 1}, {x: 1, y: 1}]);
+
+            function drawCircle() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = `rgba(0, 0, 255, ${curve.getPoint(t).y})`;
+
+                ctx.beginPath();
+                ctx.arc(200, 200, 100, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fill();
+
+                t += increment;
+
+                if (t >= 1 || t <= 0) {
+                    increment = -increment;
+                }
+            }
+
+            // Call 'drawCircle' every 10 milliseconds
+            setInterval(drawCircle, 10);
+        });
+    </script>
+</body>
+</html>
